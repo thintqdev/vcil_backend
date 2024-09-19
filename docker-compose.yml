@@ -1,26 +1,20 @@
 services:
-  mysql:
-    container_name: mysql
+  postgres:
+    container_name: postgres
     platform: linux/amd64
-    image: mysql:8.0
+    image: postgres:14
     environment:
-      MYSQL_ROOT_HOST: localhost
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: vcildb
-      MYSQL_ROOT_USER: root
-      PMA_ARBITRARY: 1
-      PMA_HOST: mysql
-      PMA_PORT: 3306
-      PMA_USER: adonis
-      PMA_PASSWORD: adonis
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: vcildb
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_volume:/var/lib/mysql
-      - $PWD/dockerConfig/mysql-dev-init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_volume:/var/lib/postgresql/data
+      - $PWD/dockerConfig/postgres-dev-init.sql:/docker-entrypoint-initdb.d/init.sql
     mem_limit: 512m
     networks:
-      - mysqlnetwork
+      - appnetwork
 
   redis:
     container_name: redis
@@ -31,13 +25,13 @@ services:
       - 6379:6379
     mem_limit: 96m
     networks:
-      - mysqlnetwork
+      - appnetwork
 
   adonis_app:
     container_name: adonis_app
     restart: always
     depends_on:
-      - mysql
+      - postgres
       - redis
     build:
       context: .
@@ -48,16 +42,17 @@ services:
     env_file:
       - .env
     environment:
-      - DB_HOST=mysql
+      - DB_HOST=postgres
+      - DB_PORT=5432
       - REDIS_HOST=redis
     volumes:
       - ./:/home/node/app
     command: dumb-init node ace serve --watch
 
 volumes:
-  mysql_volume:
+  postgres_volume:
   redis_volume:
 
 networks:
-  mysqlnetwork:
+  appnetwork:
     driver: bridge
