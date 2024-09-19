@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   mysql:
     container_name: mysql
@@ -55,9 +53,11 @@ services:
     volumes:
       - ./:/home/node/app
     command: dumb-init node ace serve --watch
+
 volumes:
   mysql_volume:
   redis_volume:
+
 networks:
   mysqlnetwork:
     driver: bridge
